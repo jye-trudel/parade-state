@@ -18,12 +18,18 @@ function labelForEntry(entry: StatusEntry): string {
 }
 
 function lineForEntry(entry: StatusEntry): string {
-  const label = labelForEntry(entry)
-  // RS entries don’t carry a duration or date range in parade messages
+  // RS entries are special: they shouldn’t include the category itself and instead
+  // show a leading dash followed by any notes. If there are no notes, fall back
+  // to showing the category so the line isn’t empty.
   if (entry.category === 'RS') {
-    return `${entry.fourD} ${label}`
+    const notes = entry.notes?.trim()
+    if (notes) {
+      return `${entry.fourD} - ${notes}`
+    }
+    return `${entry.fourD} RS`
   }
 
+  const label = labelForEntry(entry)
   const range = formatRangeDdMmYy(entry.startDate, entry.durationDays)
   return `${entry.fourD} - ${entry.durationDays}D ${label} (${range})`
 }
