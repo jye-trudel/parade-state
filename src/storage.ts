@@ -131,14 +131,33 @@ export function saveLocalEntries(entries: StatusEntry[]): void {
 async function normalizeRows(rows: any[]): Promise<StatusEntry[]> {
   const today = todayIso()
   return rows
+    .map((r) => fromDbEntry(r)) // convert DB snake_case to JS camelCase
     .map((r) => normalizeEntry(r, today))
     .filter((x): x is StatusEntry => x !== null)
 }
 
-// strip internal fields that aren't stored in the database
+// convert from DB snake_case to JS camelCase property names
+function fromDbEntry(raw: any): any {
+  return {
+    id: raw.id,
+    fourD: raw.four_d,
+    category: raw.category,
+    notes: raw.notes,
+    startDate: raw.start_date,
+    durationDays: raw.duration_days,
+  }
+}
+
+// convert from JS camelCase to DB snake_case column names
 function toDbEntry(entry: StatusEntry): any {
-  const { createdAt, updatedAt, archivedAt, ...rest } = entry as any
-  return rest
+  return {
+    id: entry.id,
+    four_d: entry.fourD,
+    category: entry.category,
+    notes: entry.notes,
+    start_date: entry.startDate,
+    duration_days: entry.durationDays,
+  }
 }
 
 function hasSupabase(): boolean {
