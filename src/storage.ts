@@ -136,16 +136,16 @@ async function normalizeRows(rows: any[]): Promise<StatusEntry[]> {
 }
 
 function hasSupabase(): boolean {
-  // empty string/undefined if env not provided
-  return Boolean(process.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL)
+  return supabase !== null
 }
 
 export async function fetchEntries(): Promise<StatusEntry[]> {
-  if (!hasSupabase()) {
+  if (!hasSupabase() || !supabase) {
     return loadLocalEntries()
   }
 
-  const { data, error } = await supabase.from<StatusEntry>('entries').select('*')
+  const client = supabase
+  const { data, error } = await client.from<StatusEntry>('entries').select('*')
   if (error) {
     console.error('fetchEntries:', error.message)
     return []
@@ -154,47 +154,53 @@ export async function fetchEntries(): Promise<StatusEntry[]> {
 }
 
 export async function upsertEntry(entry: StatusEntry): Promise<void> {
-  if (!hasSupabase()) {
+  if (!hasSupabase() || !supabase) {
     const cur = loadLocalEntries()
     const without = cur.filter((e) => e.id !== entry.id)
     saveLocalEntries(refreshEntryArchives([...without, entry]).entries)
     return
   }
 
-  const { error } = await supabase.from('entries').upsert(entry)
+  const client = supabase
+  const { error } = await client.from('entries').upsert(entry)
   if (error) console.error('upsertEntry:', error.message)
 }
 
 export async function deleteEntry(id: string): Promise<void> {
-  if (!hasSupabase()) {
+  if (!hasSupabase() || !supabase) {
     const cur = loadLocalEntries()
     const next = cur.filter((e) => e.id !== id)
     saveLocalEntries(next)
     return
   }
 
-  const { error } = await supabase.from('entries').delete().eq('id', id)
+  const client = supabase
+  const { error } = await client.from('entries').delete().eq('id', id)
   if (error) console.error('deleteEntry:', error.message)
 }
 
 export function subscribeEntries(
   callback: (entries: StatusEntry[]) => void
 ): () => void {
-  if (!hasSupabase()) {
-    // no realtime for local data; nothing to unsubscribe
+  if (!hasSupabase() || !supabase) {
+    // local mode has no real-time events
     return () => {}
   }
 
-  const subscription = supabase
-    .from('entries')
-    .on('*', async () => {
-      const e = await fetchEntries()
-      callback(e)
-    })
+  const channel = supabase
+    .channel('entries')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'entries' },
+      async () => {
+        const e = await fetchEntries()
+        callback(e)
+      }
+    )
     .subscribe()
 
   return () => {
-    supabase.removeSubscription(subscription)
+    supabase.removeChannel(channel)
   }
 }
 

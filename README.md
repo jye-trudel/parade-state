@@ -27,6 +27,10 @@ To enable cross‑device syncing you can wire the app to a Supabase project:
    VITE_SUPABASE_ANON_KEY=eyJhbGci…
    ```
 
+   > **Important:** set the same variables in your deployment platform (Vercel,
+   > Netlify, etc.) so builds and runtime environments have access. Without them
+   > the app will fall back to local storage and real‑time syncing will not work.
+
    Vite will expose these to the browser as `import.meta.env.VITE_SUPABASE_URL` and
    `VITE_SUPABASE_ANON_KEY`.
 
