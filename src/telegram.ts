@@ -80,7 +80,7 @@ export function buildTelegramMessage(input: {
   .reduce((sum, [, entries]) => sum + entries.length, 0)
 
 
-  const rsCount = grouped.RS.length
+  //Count = grouped.RS.length
 
   const lines: string[] = []
   lines.push(`${settings.platoonLabel}: ${inCamp}/${totalStrength}`)
