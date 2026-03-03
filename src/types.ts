@@ -25,7 +25,7 @@ export type StatusEntry = {
 }
 
 export type Settings = {
-  platoonLabel: string // e.g. "Platoon 1"
+  platoonLabel: string // eg plt 1
   outOfCampCategories: Array<'MC' | 'OUT_OF_CAMP'>
 }
 

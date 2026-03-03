@@ -69,3 +69,7 @@ function App() {
 }
 
 export default App
+
+
+
+//ts app is so ugly, can we rewrite in rust?

@@ -124,19 +124,19 @@ export function saveLocalEntries(entries: StatusEntry[]): void {
 }
 
 // -----------------------------------------------------------------------------
-// supabase-backed API
+// supabase backend api stuff
 // -----------------------------------------------------------------------------
 
-// helper used by both local and remote fetch paths
+// hhelper 1
 async function normalizeRows(rows: any[]): Promise<StatusEntry[]> {
   const today = todayIso()
   return rows
-    .map((r) => fromDbEntry(r)) // convert DB snake_case to JS camelCase
+    .map((r) => fromDbEntry(r)) // conversion formatting not to self use refactored chunk
     .map((r) => normalizeEntry(r, today))
     .filter((x): x is StatusEntry => x !== null)
 }
 
-// convert from DB snake_case to JS camelCase property names
+// convert 
 function fromDbEntry(raw: any): any {
   return {
     id: raw.id,
@@ -148,7 +148,7 @@ function fromDbEntry(raw: any): any {
   }
 }
 
-// convert from JS camelCase to DB snake_case column names
+// convert from js
 function toDbEntry(entry: StatusEntry): any {
   return {
     id: entry.id,
@@ -170,7 +170,7 @@ export async function fetchEntries(): Promise<StatusEntry[]> {
   }
 
   const client = supabase!
-  // generics aren’t needed here; the first parameter is the table name string
+  // not rlly needed tbh
   const { data, error } = await client.from('entries').select('*')
   if (error) {
     console.error('fetchEntries:', error.message)
@@ -209,11 +209,11 @@ export function subscribeEntries(
   callback: (entries: StatusEntry[]) => void
 ): () => void {
   if (!hasSupabase() || !supabase) {
-    // local mode has no real-time events
+    // note to self, no realtime events
     return () => {}
   }
 
-  // `supabase` is non-null here thanks to the guard above
+  // refactor for efficiency later
   const client = supabase!
   const channel = client
     .channel('entries')

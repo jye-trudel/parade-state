@@ -1,3 +1,12 @@
+// This file contains logic for building the Telegram message text from the roster and status entries.
+
+
+
+/* 
+IMPORTANt####### FILE HAS BEEN DEPRECATED AND IS NO LONGER USED IN THE APP.
+WIP CLOSED on 03-03-2026, any questions you can email me
+*/
+
 import { formatRangeDdMmYy, todayIso } from './date'
 import { isEntryActive } from './storage'
 import type { Roster, Settings, StatusEntry, StatusCategory } from './types'
@@ -18,12 +27,10 @@ function labelForEntry(entry: StatusEntry): string {
 }
 
 function lineForEntry(entry: StatusEntry): string {
-  // RS entries are special: they shouldn’t include the category itself and instead
-  // show a leading dash followed by any notes. If there are no notes, fall back
-  // to showing the category so the line isn’t empty.
+
   if (entry.category === 'RS') {
     const notes = entry.notes?.trim()
-    // always use a dash for RS lines; leave it trailing if there are no notes
+    
     if (notes) {
       return `${entry.fourD} - ${notes}`
     }
