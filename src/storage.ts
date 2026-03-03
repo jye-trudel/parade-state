@@ -144,9 +144,9 @@ export async function fetchEntries(): Promise<StatusEntry[]> {
     return loadLocalEntries()
   }
 
-  const client = supabase
-  // supabase-js v2 `from` expects two type parameters (Row, Insert)
-  const { data, error } = await client.from<StatusEntry, StatusEntry>('entries').select('*')
+  const client = supabase!
+  // generics aren’t needed here; the first parameter is the table name string
+  const { data, error } = await client.from('entries').select('*')
   if (error) {
     console.error('fetchEntries:', error.message)
     return []
@@ -162,7 +162,7 @@ export async function upsertEntry(entry: StatusEntry): Promise<void> {
     return
   }
 
-  const client = supabase
+  const client = supabase!
   const { error } = await client.from('entries').upsert(entry)
   if (error) console.error('upsertEntry:', error.message)
 }
@@ -175,7 +175,7 @@ export async function deleteEntry(id: string): Promise<void> {
     return
   }
 
-  const client = supabase
+  const client = supabase!
   const { error } = await client.from('entries').delete().eq('id', id)
   if (error) console.error('deleteEntry:', error.message)
 }
@@ -189,7 +189,7 @@ export function subscribeEntries(
   }
 
   // `supabase` is non-null here thanks to the guard above
-  const client = supabase
+  const client = supabase!
   const channel = client
     .channel('entries')
     .on(
@@ -203,7 +203,7 @@ export function subscribeEntries(
     .subscribe()
 
   return () => {
-    supabase.removeChannel(channel)
+    client.removeChannel(channel)
   }
 }
 
