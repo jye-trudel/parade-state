@@ -135,6 +135,12 @@ async function normalizeRows(rows: any[]): Promise<StatusEntry[]> {
     .filter((x): x is StatusEntry => x !== null)
 }
 
+// strip internal fields that aren't stored in the database
+function toDbEntry(entry: StatusEntry): any {
+  const { createdAt, updatedAt, archivedAt, ...rest } = entry as any
+  return rest
+}
+
 function hasSupabase(): boolean {
   return supabase !== null
 }
@@ -163,7 +169,7 @@ export async function upsertEntry(entry: StatusEntry): Promise<void> {
   }
 
   const client = supabase!
-  const { error } = await client.from('entries').upsert(entry)
+  const { error } = await client.from('entries').upsert(toDbEntry(entry))
   if (error) console.error('upsertEntry:', error.message)
 }
 
