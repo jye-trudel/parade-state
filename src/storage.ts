@@ -1,6 +1,7 @@
 import { endDateIso, todayIso } from './date'
 import { normalizeFourD } from './roster/roster'
 import type { Settings, StatusCategory, StatusEntry } from './types'
+import { supabase } from './supabase'
 
 const ENTRIES_KEY = 'ps.entries.v1'
 const SETTINGS_KEY = 'ps.settings.v1'
@@ -102,7 +103,11 @@ function normalizeEntry(raw: unknown, today: string): StatusEntry | null {
   return normalized
 }
 
-export function loadEntries(): StatusEntry[] {
+// -----------------------------------------------------------------------------
+// client-side helpers (unchanged)
+// -----------------------------------------------------------------------------
+
+export function loadLocalEntries(): StatusEntry[] {
   const today = todayIso()
   const raw = localStorage.getItem(ENTRIES_KEY)
   if (!raw) return []
@@ -114,8 +119,83 @@ export function loadEntries(): StatusEntry[] {
   return normalized
 }
 
-export function saveEntries(entries: StatusEntry[]): void {
+export function saveLocalEntries(entries: StatusEntry[]): void {
   localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries))
+}
+
+// -----------------------------------------------------------------------------
+// supabase-backed API
+// -----------------------------------------------------------------------------
+
+// helper used by both local and remote fetch paths
+async function normalizeRows(rows: any[]): Promise<StatusEntry[]> {
+  const today = todayIso()
+  return rows
+    .map((r) => normalizeEntry(r, today))
+    .filter((x): x is StatusEntry => x !== null)
+}
+
+function hasSupabase(): boolean {
+  // empty string/undefined if env not provided
+  return Boolean(process.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL)
+}
+
+export async function fetchEntries(): Promise<StatusEntry[]> {
+  if (!hasSupabase()) {
+    return loadLocalEntries()
+  }
+
+  const { data, error } = await supabase.from<StatusEntry>('entries').select('*')
+  if (error) {
+    console.error('fetchEntries:', error.message)
+    return []
+  }
+  return normalizeRows(data ?? [])
+}
+
+export async function upsertEntry(entry: StatusEntry): Promise<void> {
+  if (!hasSupabase()) {
+    const cur = loadLocalEntries()
+    const without = cur.filter((e) => e.id !== entry.id)
+    saveLocalEntries(refreshEntryArchives([...without, entry]).entries)
+    return
+  }
+
+  const { error } = await supabase.from('entries').upsert(entry)
+  if (error) console.error('upsertEntry:', error.message)
+}
+
+export async function deleteEntry(id: string): Promise<void> {
+  if (!hasSupabase()) {
+    const cur = loadLocalEntries()
+    const next = cur.filter((e) => e.id !== id)
+    saveLocalEntries(next)
+    return
+  }
+
+  const { error } = await supabase.from('entries').delete().eq('id', id)
+  if (error) console.error('deleteEntry:', error.message)
+}
+
+export function subscribeEntries(
+  callback: (entries: StatusEntry[]) => void
+): () => void {
+  if (!hasSupabase()) {
+    // no realtime for local data; nothing to unsubscribe
+    return () => {}
+  }
+
+  const subscription = supabase
+    .from('entries')
+    .on('*', async () => {
+      const e = await fetchEntries()
+      callback(e)
+    })
+    .subscribe()
+
+  return () => {
+    supabase.removeSubscription(subscription)
+  }
 }
 
 export function isEntryActive(entry: StatusEntry, atIso: string = todayIso()): boolean {
