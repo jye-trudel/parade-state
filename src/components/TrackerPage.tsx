@@ -2,7 +2,15 @@ import { useMemo, useState, useEffect } from 'react'
 import { formatRangeDdMmYy, todayIso } from '../date'
 import { loadRoster } from '../roster/storage'
 import { normalizeFourD } from '../roster/roster'
-import { isEntryActive, loadEntries, newId, refreshEntryArchives, saveEntries } from '../storage'
+import {
+  isEntryActive,
+  newId,
+  refreshEntryArchives,
+  fetchEntries,
+  upsertEntry,
+  deleteEntry,
+  subscribeEntries,
+} from '../storage'
 import { buildTelegramMessage } from '../telegram'
 import type { Settings, StatusCategory, StatusEntry } from '../types'
 
@@ -28,7 +36,7 @@ function byFourD(a: StatusEntry, b: StatusEntry): number {
 export function TrackerPage({ onGoRoster, settings }: Props) {
   const roster = useMemo(() => loadRoster(), [])
 
-  const [entries, setEntries] = useState<StatusEntry[]>(() => loadEntries())
+  const [entries, setEntries] = useState<StatusEntry[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [actionNote, setActionNote] = useState<string>('')
 
@@ -71,14 +79,14 @@ export function TrackerPage({ onGoRoster, settings }: Props) {
     setError('')
   }
 
-  function remove(id: string) {
+  async function remove(id: string) {
     const next = entries.filter((e) => e.id !== id)
     setEntries(next)
-    saveEntries(next)
+    await deleteEntry(id)
     if (editingId === id) resetForm()
   }
 
-  function upsert() {
+  async function upsert() {
     setError('')
     const normalized = normalizeFourD(fourD)
     if (!normalized) {
@@ -128,7 +136,7 @@ export function TrackerPage({ onGoRoster, settings }: Props) {
     const refreshed = refreshEntryArchives(next).entries
 
     setEntries(refreshed)
-    saveEntries(refreshed)
+    await upsertEntry(nextEntry)
     resetForm()
   }
 
@@ -158,6 +166,24 @@ export function TrackerPage({ onGoRoster, settings }: Props) {
       setActionNote('Share failed. Try Copy instead.')
     }
   }
+
+
+  // load initial entries & subscribe for realtime updates
+  useEffect(() => {
+    let mounted = true
+    fetchEntries().then((e) => {
+      if (mounted) setEntries(e)
+    })
+
+    const unsubscribe = subscribeEntries((e) => {
+      if (mounted) setEntries(e)
+    })
+
+    return () => {
+      mounted = false
+      unsubscribe()
+    }
+  }, [])
 
   if (!roster) {
     return (
