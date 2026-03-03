@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { formatRangeDdMmYy, todayIso } from '../date'
 import { loadRoster } from '../roster/storage'
 import { normalizeFourD } from '../roster/roster'
@@ -40,6 +40,14 @@ export function TrackerPage({ onGoRoster, settings }: Props) {
   const [durationDays, setDurationDays] = useState<number>(1)
   const [notes, setNotes] = useState<string>('')
   const [error, setError] = useState<string>('')
+
+  // ensure RS entries don’t accidentally keep old dates
+  useEffect(() => {
+    if (category === 'RS') {
+      setStartDate(todayIso())
+      setDurationDays(1)
+    }
+  }, [category])
 
   const activeEntries = useMemo(() => entries.filter((e) => isEntryActive(e)), [entries])
 
@@ -198,21 +206,25 @@ export function TrackerPage({ onGoRoster, settings }: Props) {
             </select>
           </label>
 
-          <label className="field">
-            <div className="label">Start date</div>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-          </label>
+          {category !== 'RS' && (
+            <>
+              <label className="field">
+                <div className="label">Start date</div>
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </label>
 
-          <label className="field">
-            <div className="label">Duration (days)</div>
-            <input
-              inputMode="numeric"
-              type="number"
-              min={1}
-              value={durationDays}
-              onChange={(e) => setDurationDays(Number(e.target.value))}
-            />
-          </label>
+              <label className="field">
+                <div className="label">Duration (days)</div>
+                <input
+                  inputMode="numeric"
+                  type="number"
+                  min={1}
+                  value={durationDays}
+                  onChange={(e) => setDurationDays(Number(e.target.value))}
+                />
+              </label>
+            </>
+          )}
 
           <label className="field full">
             <div className="label">Notes (optional)</div>
@@ -266,9 +278,11 @@ export function TrackerPage({ onGoRoster, settings }: Props) {
                       <div className="entryTop">
                         <span className="mono">{e.fourD}</span>
                         <span className="badge">{e.category}</span>
-                        <span className="muted">
-                          {e.durationDays}D · {formatRangeDdMmYy(e.startDate, e.durationDays)}
-                        </span>
+                        {e.category !== 'RS' ? (
+                          <span className="muted">
+                            {e.durationDays}D · {formatRangeDdMmYy(e.startDate, e.durationDays)}
+                          </span>
+                        ) : null}
                       </div>
                       {e.notes ? <div className="muted">{e.notes}</div> : null}
                     </button>

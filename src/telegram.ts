@@ -18,8 +18,14 @@ function labelForEntry(entry: StatusEntry): string {
 }
 
 function lineForEntry(entry: StatusEntry): string {
+  const label = labelForEntry(entry)
+  // RS entries don’t carry a duration or date range in parade messages
+  if (entry.category === 'RS') {
+    return `${entry.fourD} ${label}`
+  }
+
   const range = formatRangeDdMmYy(entry.startDate, entry.durationDays)
-  return `${entry.fourD} - ${entry.durationDays}D ${labelForEntry(entry)} (${range})`
+  return `${entry.fourD} - ${entry.durationDays}D ${label} (${range})`
 }
 
 export function buildTelegramMessage(input: {
