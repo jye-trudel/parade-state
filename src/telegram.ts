@@ -79,7 +79,7 @@ export function buildTelegramMessage(input: {
   .filter(([category]) => category !== 'RS' && ['LD', 'EX', 'OTHER'].includes(category))
   .reduce((sum, [, entries]) => sum + entries.length, 0)
 
-  
+
   const rsCount = grouped.RS.length
 
   const lines: string[] = []
@@ -100,8 +100,8 @@ export function buildTelegramMessage(input: {
 
   lines.push(`Status: ${pad2(statusCount)}`)
   // show RS separately so it doesn’t inflate the status figure
-  lines.push(`RS: ${pad2(rsCount)}`)
-  lines.push('')
+  //lines.push(`RS: ${pad2(rsCount)}`)
+  //lines.push('')
 
   lines.push(`LD: ${pad2(grouped.LD.length)}/${pad2(grouped.LD.length)}`)
   for (const e of grouped.LD) lines.push(lineForEntry(e))
