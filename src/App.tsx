@@ -72,4 +72,4 @@ export default App
 
 
 
-//ts app is so ugly, can we rewrite in rust?
+//ts app is so ugly, might need to re write in rust
