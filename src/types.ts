@@ -10,7 +10,7 @@ export type RosterImportResult = {
   warnings: string[]
 }
 
-export type StatusCategory = 'MC' | 'LD' | 'EX' | 'RS' | 'OUT_OF_CAMP' | 'EX_STAY_IN' | 'OTHER'
+export type StatusCategory = 'MC' | 'LD' | 'EX'| 'RS' |'OUT_OF_CAMP' | 'EX_STAY_IN' | 'OTHER'
 
 export type StatusEntry = {
   id: string

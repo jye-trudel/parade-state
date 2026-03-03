@@ -72,7 +72,15 @@ export function buildTelegramMessage(input: {
   }).length
   const inCamp = Math.max(0, totalStrength - outOfCampCount)
 
-  const statusCount = grouped.LD.length + grouped.EX.length + grouped.RS.length + grouped.OTHER.length
+  // RS (report sick) is not considered part of the standard status tally
+  //const statusCount = grouped.LD.length + grouped.EX.length + grouped.OTHER.length
+
+  const statusCount = Object.entries(grouped)
+  .filter(([category]) => category !== 'RS' && ['LD', 'EX', 'OTHER'].includes(category))
+  .reduce((sum, [, entries]) => sum + entries.length, 0)
+
+  
+  const rsCount = grouped.RS.length
 
   const lines: string[] = []
   lines.push(`${settings.platoonLabel}: ${inCamp}/${totalStrength}`)
@@ -91,6 +99,8 @@ export function buildTelegramMessage(input: {
   lines.push('')
 
   lines.push(`Status: ${pad2(statusCount)}`)
+  // show RS separately so it doesn’t inflate the status figure
+  lines.push(`RS: ${pad2(rsCount)}`)
   lines.push('')
 
   lines.push(`LD: ${pad2(grouped.LD.length)}/${pad2(grouped.LD.length)}`)
