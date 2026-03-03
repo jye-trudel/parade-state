@@ -145,7 +145,8 @@ export async function fetchEntries(): Promise<StatusEntry[]> {
   }
 
   const client = supabase
-  const { data, error } = await client.from<StatusEntry>('entries').select('*')
+  // supabase-js v2 `from` expects two type parameters (Row, Insert)
+  const { data, error } = await client.from<StatusEntry, StatusEntry>('entries').select('*')
   if (error) {
     console.error('fetchEntries:', error.message)
     return []
@@ -187,7 +188,9 @@ export function subscribeEntries(
     return () => {}
   }
 
-  const channel = supabase
+  // `supabase` is non-null here thanks to the guard above
+  const client = supabase
+  const channel = client
     .channel('entries')
     .on(
       'postgres_changes',
