@@ -23,10 +23,11 @@ function lineForEntry(entry: StatusEntry): string {
   // to showing the category so the line isn’t empty.
   if (entry.category === 'RS') {
     const notes = entry.notes?.trim()
+    // always use a dash for RS lines; leave it trailing if there are no notes
     if (notes) {
       return `${entry.fourD} - ${notes}`
     }
-    return `${entry.fourD} RS`
+    return `${entry.fourD} -`
   }
 
   const label = labelForEntry(entry)
