@@ -12,6 +12,8 @@ Currently, two official plugins are available:
 To enable cross‑device syncing you can wire the app to a Supabase project:
 
 1. Sign up at https://supabase.com and create a new project.
+   (for example, one of your projects might be hosted at
+   `https://xgsyrtdzmtdtttipgzab.supabase.co`)
 2. Create a table called `entries` with columns matching the
    `StatusEntry` type (id text primary key, fourD text, category text, startDate
    text, durationDays integer, notes text, archivedAt text, createdAt text,
@@ -21,7 +23,7 @@ To enable cross‑device syncing you can wire the app to a Supabase project:
 4. Create a `.env` at the repo root and add:
 
    ```ini
-   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_URL=https://xgsyrtdzmtdtttipgzab.supabase.co
    VITE_SUPABASE_ANON_KEY=eyJhbGci…
    ```
 
