@@ -22,6 +22,10 @@ To enable cross‑device syncing you can wire the app to a Supabase project:
 3. In your project settings copy the **URL** and **anon key**.
 4. Create a `.env` at the repo root and add:
 
+   **Do not commit `.env` to version control** – it contains your anon key and
+   other sensitive information. Keep `.env.example` around as a template.
+
+
    ```ini
    VITE_SUPABASE_URL=https://xgsyrtdzmtdtttipgzab.supabase.co
    VITE_SUPABASE_ANON_KEY=eyJhbGci…
